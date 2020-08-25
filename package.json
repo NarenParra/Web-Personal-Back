@@ -1,0 +1,21 @@
+{
+  "name": "web-personal-back",
+  "version": "0.0.1",
+  "description": "Back enda para web Naren Parra",
+  "main": "index.js",
+  "author": "Naren Parra",
+  "license": "MIT",
+  "dependencies": {
+    "bcrypt-nodejs": "^0.0.3",
+    "body-parser": "^1.19.0",
+    "connect-multiparty": "^2.2.0",
+    "express": "^4.17.1",
+    "jwt-simple": "^0.5.6",
+    "moment": "^2.27.0",
+    "mongoose": "^5.10.0",
+    "nodemon": "^2.0.4"
+  },
+  "scripts": {
+    "start": "nodemon index.js"
+  }
+}
