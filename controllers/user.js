@@ -1,6 +1,7 @@
 const bcrypt = require("bcrypt-nodejs");
 const User = require("../models/user");
 const jwt = require("../services/jwt");
+const user = require("../models/user");
 
 function singUp(req, res) {
   const user = new User();
@@ -75,7 +76,31 @@ function signIn(req, res) {
   });
 }
 
+function getUsers(req, res) {
+  User.find().then((users) => {
+    if (!users) {
+      res.status(404).send({ message: "No hay Usuarios" });
+    } else {
+      res.status(200).send({ users });
+    }
+  });
+}
+
+function getUsersActive(req, res) {
+  const query = req.query;
+
+  User.find({ active: query.active }).then((users) => {
+    if (!users) {
+      res.status(404).send({ message: "No hay Usuarios" });
+    } else {
+      res.status(200).send({ users });
+    }
+  });
+}
+
 module.exports = {
   singUp,
   signIn,
+  getUsers,
+  getUsersActive,
 };
