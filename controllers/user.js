@@ -1,3 +1,5 @@
+const fs = require("fs");
+const path = require("path");
 const bcrypt = require("bcrypt-nodejs");
 const User = require("../models/user");
 const jwt = require("../services/jwt");
@@ -98,9 +100,57 @@ function getUsersActive(req, res) {
   });
 }
 
+function uploadAvatar(req, res) {
+  const params = req.params;
+  User.findById({ _id: params.id }, (err, userData) => {
+    if (err) {
+      res.status(500).send({ message: "Error del servidor" });
+    } else {
+      if (!userData) {
+        res.status(404).send({ message: "Usuario no encontrado" });
+      } else {
+        let user = userData;
+        if (req.files) {
+          let filesPath = req.files.avatar.path;
+          let fileSplit = filesPath.split("\\");
+          let fileName = fileSplit[2];
+          let extSplit = fileName.split(".");
+          let fileExt = extSplit[1];
+
+          if (fileExt !== "png" && fileExt !== "jpg") {
+            res.status(400).send({
+              message: "Extencion no valida. (Extenciones validas .png .jpg)",
+            });
+          } else {
+            user.avatar = fileName;
+            User.findByIdAndUpdate(
+              { _id: params.id },
+              user,
+              (err, userResult) => {
+                if (err) {
+                  res.status(505).send({ message: "Error del servidor" });
+                } else {
+                  if (!userResult) {
+                    res.status(404).send({ message: "Usuario no encontrado" });
+                  } else {
+                    res.status(200).send({
+                      avatarName: fileName,
+                    });
+                  }
+                }
+              }
+            );
+          }
+        }
+      }
+    }
+  });
+}
+
 module.exports = {
   singUp,
   signIn,
   getUsers,
   getUsersActive,
+  uploadAvatar,
 };
