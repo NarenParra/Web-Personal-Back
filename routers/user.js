@@ -16,5 +16,14 @@ api.put(
   [md_auth.ensureAuth, md_upload_avatar],
   UserController.uploadAvatar
 );
+api.get("/get-avatar/:avatarName", UserController.getAvatar);
+api.put("/update-user/:id", [md_auth.ensureAuth], UserController.updateUser);
+api.put(
+  "/activate-user/:id",
+  [md_auth.ensureAuth],
+  UserController.activateUser
+);
+api.delete("/delete-user/:id", [md_auth.ensureAuth], UserController.deleteUser);
+api.post("/sing-up-admin", [md_auth.ensureAuth], UserController.singUpAdmin);
 
 module.exports = api;

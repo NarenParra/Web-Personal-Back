@@ -16,14 +16,14 @@ function singUp(req, res) {
   user.active = false;
 
   if (!password || !repeatPassword) {
-    res.status(404).send({ message: "Las contrasenias son obligatorias" });
+    res.status(404).send({ message: "Las contraseñas son obligatorias" });
   } else {
     if (password !== repeatPassword) {
-      res.status(404).send({ message: "Las contrasenias deben ser iguales" });
+      res.status(404).send({ message: "Las contraseñas deben ser iguales" });
     } else {
       bcrypt.hash(password, null, null, function (err, hash) {
         if (err) {
-          res.status(500).send({ message: "error al encriptar contrasenia" });
+          res.status(500).send({ message: "error al encriptar contraseña" });
         } else {
           user.password = hash;
 
@@ -61,7 +61,7 @@ function signIn(req, res) {
           if (err) {
             res.status(500).send({ message: "Error del servidor" });
           } else if (!check) {
-            res.status(404).send({ message: "La contrasenia es incorrecta" });
+            res.status(404).send({ message: "La contraseña es incorrecta" });
           } else {
             if (!userStored.active) {
               res.status(200).send({ message: "El usuario no esta activo" });
@@ -147,10 +147,129 @@ function uploadAvatar(req, res) {
   });
 }
 
+function getAvatar(req, res) {
+  const avatarName = req.params.avatarName;
+  const filePath = "./uploads/avatar/" + avatarName;
+  fs.exists(filePath, (exist) => {
+    if (!exist) {
+      res.status(404).send({ message: "Avatar no dispoible" });
+    } else {
+      res.sendFile(path.resolve(filePath));
+    }
+  });
+}
+
+async function updateUser(req, res) {
+  let userData = req.body;
+  userData.email = req.body.email.toLowerCase();
+  const params = req.params;
+
+  if (userData.password) {
+    await bcrypt.hash(userData.password, null, null, (err, hash) => {
+      if (err) {
+        res.status(500).send({ message: "Error al encriptar la contraseña" });
+      } else {
+        userData.password = hash;
+      }
+    });
+  }
+
+  User.findByIdAndUpdate({ _id: params.id }, userData, (err, userUpdate) => {
+    if (err) {
+      res.status(500).send({ message: "Error del servidor" });
+    } else {
+      if (!userUpdate) {
+        res.status(404).send({ message: "Usuario no encontrado" });
+      } else {
+        res.status(200).send({ message: "Usuario actualizado correctamente" });
+      }
+    }
+  });
+}
+
+function activateUser(req, res) {
+  const { id } = req.params;
+  const { active } = req.body;
+
+  User.findByIdAndUpdate(id, { active }, (err, userStored) => {
+    if (err) {
+      res.status(500).send({ message: "Error del servidor" });
+    } else {
+      if (!userStored) {
+        res.status(404).send({ message: "No se ha encontrado el usuario" });
+      } else {
+        if (active === true) {
+          res.status(200).send({ message: "Usuario activado" });
+        } else {
+          res.status(200).send({ message: "Usuario desactivado" });
+        }
+      }
+    }
+  });
+}
+
+function deleteUser(req, res) {
+  const { id } = req.params;
+
+  User.findByIdAndRemove(id, (err, userDeleted) => {
+    if (err) {
+      res.status(500).send({ message: "Error del servidor" });
+    } else {
+      if (!userDeleted) {
+        res.status(404).send({ message: "Usuario no encontrado" });
+      } else {
+        res.status(200).send({ message: "Usuario eliminado conrectamente" });
+      }
+    }
+  });
+  console.log("delete user");
+}
+
+function singUpAdmin(req, res) {
+  const user = new User();
+
+  const { name, lastname, email, role, password } = req.body;
+
+  user.name = name;
+  user.lastname = lastname;
+  user.email = email.toLowerCase();
+  user.role = role;
+  user.active = true;
+
+  if (!password) {
+    res.status(500).send({ message: "La contraseña es obligatoria" });
+  } else {
+    bcrypt.hash(password, null, null, (err, hash) => {
+      if (err) {
+        res.status(500).send({ message: "Error al encriptar la contraseña" });
+      } else {
+        user.password = hash;
+
+        user.save((err, userStored) => {
+          if (err) {
+            res.status(500).send({ message: "El usuario ya existe" });
+          } else {
+            if (!userStored) {
+              res.status(404).send({ message: "Error del servidor" });
+            } else {
+              res.status(200).send({ message: "Usuario creado" });
+            }
+          }
+        });
+      }
+    });
+  }
+}
+
 module.exports = {
   singUp,
   signIn,
   getUsers,
   getUsersActive,
   uploadAvatar,
+  getAvatar,
+  updateUser,
+  activateUser,
+  deleteUser,
+  singUpAdmin,
 };
